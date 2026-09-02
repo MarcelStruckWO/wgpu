@@ -396,38 +396,22 @@ impl Swapchain for NativeSwapchain {
         }
 
         // We cannot take this by value, as the function returns `self`.
-        //
-        // An in-flight AcquiredSurfaceTexture may still hold a reference to a
-        // semaphore, e.g. when the device was lost while a surface image was
-        // acquired. In that case we skip the destruction here: destroying a
-        // semaphore on a lost device is not permitted, and the semaphore is a
-        // device-level object that is reclaimed together with the device.
         for semaphore in self.acquire_semaphores.drain(..) {
-            match Arc::into_inner(semaphore) {
-                Some(mutex_removed) => {
-                    let semaphore_removed = mutex_removed.into_inner();
-                    unsafe { semaphore_removed.destroy(&device.shared.raw) };
-                }
-                None => {
-                    log::warn!(
-                        "Skipping destroy of swapchain acquire semaphore still referenced by an in-flight surface texture"
-                    );
-                }
-            }
+            let arc_removed = Arc::into_inner(semaphore).expect(
+                "Trying to destroy a SwapchainAcquireSemaphore that is still in use by a SurfaceTexture",
+            );
+            let mutex_removed = arc_removed.into_inner();
+
+            unsafe { mutex_removed.destroy(&device.shared.raw) };
         }
 
         for semaphore in self.present_semaphores.drain(..) {
-            match Arc::into_inner(semaphore) {
-                Some(mutex_removed) => {
-                    let semaphore_removed = mutex_removed.into_inner();
-                    unsafe { semaphore_removed.destroy(&device.shared.raw) };
-                }
-                None => {
-                    log::warn!(
-                        "Skipping destroy of swapchain present semaphore still referenced by an in-flight surface texture"
-                    );
-                }
-            }
+            let arc_removed = Arc::into_inner(semaphore).expect(
+                "Trying to destroy a SwapchainPresentSemaphores that is still in use by a SurfaceTexture",
+            );
+            let mutex_removed = arc_removed.into_inner();
+
+            unsafe { mutex_removed.destroy(&device.shared.raw) };
         }
     }
 
