@@ -84,6 +84,7 @@ Bottom level categories:
 
 #### Vulkan
 
+- Pad binary semaphore values when chaining timeline submit information to avoid `vkQueueSubmit` crashes on gfxstream and PowerVR drivers. Based on [#10677](https://github.com/gfx-rs/wgpu/pull/10677), with padding enabled for all drivers.
 - Stop passing an un-waited fence to `vkAcquireNextImageKHR` on non-Windows platforms, which triggered `VUID-vkAcquireNextImageKHR-fence-10066` validation errors every frame since v30.0.0. By @ErichDonGubler in [#9855](https://github.com/gfx-rs/wgpu/issues/9855).
 - Recover from `VK_ERROR_FRAGMENTED_POOL` and `VK_ERROR_OUT_OF_POOL_MEMORY` when allocating descriptor sets by resetting or retiring the offending pool and retrying on the next available (or a freshly created) pool instead of panicking. By @beicause in [#10264](https://github.com/gfx-rs/wgpu/pull/10264).
 
